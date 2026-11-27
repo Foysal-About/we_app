@@ -28,7 +28,12 @@ class WeBottomBar extends StatelessWidget {
     return ListenableBuilder(
       listenable: app,
       builder: (context, _) => Padding(
-        padding: EdgeInsets.fromLTRB(16, 0, 16, bottom < 12 ? 12 : bottom),
+        padding: EdgeInsets.fromLTRB(
+          Sp.x4,
+          0,
+          Sp.x4,
+          bottom < 12 ? 12 : bottom,
+        ),
         child: GlassPanel(
           child: SizedBox(
             height: 64,
@@ -59,9 +64,7 @@ class WeBottomBar extends StatelessWidget {
                               : i == 3
                               ? app.favorites.length
                               : 0,
-                          badgeColor: i == 2
-                              ? const Color(0xFFE36B35)
-                              : const Color(0xFF53D5FF),
+                          badgeColor: i == 2 ? kAccent : kInfo,
                           badgeTextColor: i == 2 ? Colors.white : kInk,
                         ),
                         if (i < _icons.length - 1)
@@ -116,7 +119,7 @@ class _NavItem extends StatelessWidget {
           height: 46,
           decoration: BoxDecoration(
             color: active ? kBrandGreen : Colors.transparent,
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(Rd.pill),
             boxShadow: active
                 ? [
                     BoxShadow(
@@ -182,11 +185,11 @@ class _NavItem extends StatelessWidget {
                         key: ValueKey(badge),
                         height: 16,
                         constraints: const BoxConstraints(minWidth: 16),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(horizontal: Sp.x1),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: badgeColor,
-                          borderRadius: BorderRadius.circular(100),
+                          borderRadius: BorderRadius.circular(Rd.pill),
                           border: Border.all(color: Colors.white, width: 1.2),
                         ),
                         child: Text(

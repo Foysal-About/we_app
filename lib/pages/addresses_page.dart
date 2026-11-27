@@ -13,13 +13,15 @@ class AddressesPage extends StatelessWidget {
     return Scaffold(
       body: ListenableBuilder(
         listenable: app,
-        builder: (context, _) => Column(
+        builder: (context, _) => GlassHeaderColumn(
           children: [
             const PageHeader(title: 'Shipping Addresses'),
             Expanded(
               child: app.addresses.isEmpty
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      // Offset so the content centres in the area below the bar.
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const EmptyState(
                           icon: Icons.location_off_outlined,
@@ -34,7 +36,12 @@ class AddressesPage extends StatelessWidget {
                       ],
                     )
                   : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                      padding: EdgeInsets.fromLTRB(
+                        Sp.page,
+                        PageHeader.heightOf(context) + Sp.x1,
+                        Sp.page,
+                        100,
+                      ),
                       itemCount: app.addresses.length,
                       separatorBuilder: (_, _) => const SizedBox(height: 14),
                       itemBuilder: (_, i) => _AddressTile(
@@ -89,13 +96,13 @@ class AddressesPage extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             WeTextField(label: 'Full name', controller: name),
-            const SizedBox(height: 12),
+            const SizedBox(height: Sp.x3),
             WeTextField(
               label: 'Phone',
               controller: phone,
               keyboard: TextInputType.phone,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: Sp.x3),
             WeTextField(label: 'Address', controller: line, maxLines: 2),
             const SizedBox(height: 18),
             PrimaryButton(
@@ -134,14 +141,15 @@ class _AddressTile extends StatelessWidget {
       onTap: () => app.setDefaultAddress(address.id),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.fromLTRB(14, 14, 6, 10),
+        padding: const EdgeInsets.fromLTRB(Sp.x4, Sp.x4, Sp.x2, Sp.x3),
         decoration: BoxDecoration(
-          color: isDefault ? kBeige : Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          color: isDefault ? kSoftGreen.withValues(alpha: 0.5) : Colors.white,
+          borderRadius: BorderRadius.circular(Rd.lg),
           border: Border.all(
-            color: isDefault ? kBrandGreen : kBarGrey,
-            width: isDefault ? 1.6 : 1,
+            color: isDefault ? kBrandGreen : Colors.transparent,
+            width: 2,
           ),
+          boxShadow: isDefault ? null : Elev.card,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -154,7 +162,7 @@ class _AddressTile extends StatelessWidget {
                   : Icons.place_outlined,
               color: kInk,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: Sp.x3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,15 +174,15 @@ class _AddressTile extends StatelessWidget {
                         style: dm(14, weight: FontWeight.w700),
                       ),
                       if (isDefault) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: Sp.x2),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
+                            horizontal: Sp.x2,
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
                             color: kBrandGreen,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(Rd.xl),
                           ),
                           child: Text(
                             'Default',
@@ -188,13 +196,13 @@ class _AddressTile extends StatelessWidget {
                       ],
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: Sp.x1),
                   Text(
                     [
                       address.name,
                       address.phone,
                     ].where((s) => s.isNotEmpty).join(' · '),
-                    style: dm(12, color: Colors.black54),
+                    style: dm(12, color: kMuted),
                   ),
                   if (address.line.isNotEmpty)
                     Text(address.line, style: dm(13, height: 1.35)),

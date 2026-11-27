@@ -14,13 +14,15 @@ class SavedCardsPage extends StatelessWidget {
     return Scaffold(
       body: ListenableBuilder(
         listenable: app,
-        builder: (context, _) => Column(
+        builder: (context, _) => GlassHeaderColumn(
           children: [
             const PageHeader(title: 'Payment Method'),
             Expanded(
               child: app.cards.isEmpty
                   ? Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      // Offset so the content centres in the area below the bar.
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const EmptyState(
                           icon: Icons.credit_card_off_outlined,
@@ -35,10 +37,15 @@ class SavedCardsPage extends StatelessWidget {
                       ],
                     )
                   : ListView(
-                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 100),
+                      padding: EdgeInsets.fromLTRB(
+                        Sp.page,
+                        PageHeader.heightOf(context) + Sp.x1,
+                        Sp.page,
+                        100,
+                      ),
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: Sp.x3),
                           child: Text(
                             'Your payment cards',
                             style: dm(14, weight: FontWeight.w600),
@@ -78,7 +85,7 @@ class SavedCardsPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WeTextField(label: 'Card holder name', controller: holder),
-          const SizedBox(height: 12),
+          const SizedBox(height: Sp.x3),
           WeTextField(
             label: 'Card number',
             controller: number,
@@ -88,7 +95,7 @@ class SavedCardsPage extends StatelessWidget {
               LengthLimitingTextInputFormatter(16),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Sp.x3),
           WeTextField(
             label: 'Expiry (MM/YY)',
             controller: expiry,
@@ -97,9 +104,9 @@ class SavedCardsPage extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             'Only the last 4 digits are kept on this device.',
-            style: dm(11, color: Colors.black54),
+            style: dm(11, color: kMuted),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: Sp.x4),
           Builder(
             builder: (ctx) => PrimaryButton(
               label: 'Save card',
@@ -137,9 +144,9 @@ class _CardTile extends StatelessWidget {
         children: [
           Container(
             height: 190,
-            padding: const EdgeInsets.fromLTRB(22, 18, 22, 18),
+            padding: const EdgeInsets.fromLTRB(Sp.x6, Sp.x5, Sp.x6, Sp.x5),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(Rd.xl),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -166,7 +173,7 @@ class _CardTile extends StatelessWidget {
                       height: 28,
                       decoration: BoxDecoration(
                         color: const Color(0xFFF2B33D),
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(Rd.sm),
                       ),
                     ),
                     Text(
@@ -208,11 +215,11 @@ class _CardTile extends StatelessWidget {
               Flexible(
                 child: InkWell(
                   onTap: () => app.setDefaultCard(card.id),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(Rd.sm),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 4,
+                      vertical: Sp.x2,
+                      horizontal: Sp.x1,
                     ),
                     child: Row(
                       children: [
@@ -221,9 +228,9 @@ class _CardTile extends StatelessWidget {
                               ? Icons.check_box
                               : Icons.check_box_outline_blank,
                           size: 22,
-                          color: isDefault ? kBrandGreen : Colors.black54,
+                          color: isDefault ? kBrandGreen : kMuted,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: Sp.x2),
                         Flexible(
                           child: Text(
                             'Use as default payment method',
@@ -240,7 +247,7 @@ class _CardTile extends StatelessWidget {
               IconButton(
                 tooltip: 'Remove card',
                 onPressed: () => app.removeCard(card.id),
-                icon: const Icon(Icons.delete_outline, color: Colors.black54),
+                icon: const Icon(Icons.delete_outline, color: kMuted),
               ),
             ],
           ),

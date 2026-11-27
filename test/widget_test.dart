@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:we_app/core/app_state.dart';
 import 'package:we_app/core/models.dart';
 import 'package:we_app/main.dart';
+import 'package:we_app/pages/home_page.dart';
 import 'package:we_app/widgets/common.dart';
 
 void main() {
@@ -35,6 +36,8 @@ void main() {
     expect(find.text('Tiger Cement OPC'), findsOneWidget);
 
     // Product -> cart (qty 2).
+    await tester.ensureVisible(find.text('Tiger Cement OPC'));
+    await settle();
     await tester.tap(find.text('Tiger Cement OPC'));
     await settle();
     await tester.tap(find.byIcon(Icons.add));
@@ -90,19 +93,22 @@ void main() {
     );
   });
 
-  test('recently viewed keeps newest first, max 6', () {
-    app.viewed.clear();
-    for (final id in ['opc', 'ppc', 'brick3', 'hollow', 'opc']) {
-      app.markViewed(id);
-    }
-    expect(app.viewed.first, 'opc');
-    expect(app.viewed.length, 4);
-  });
-
   test('forms accept anything', () {
     app.addCard(number: 'abc', holder: '', expiry: '');
     expect(app.cards.last.last4, '0000');
     app.addReview('opc', 3, '');
     expect(app.reviews.first.rating, 3);
+  });
+
+  test('greeting follows the time of day', () {
+    String at(int h) => greetingFor(DateTime(2026, 1, 1, h));
+    expect(at(5), 'Good morning');
+    expect(at(11), 'Good morning');
+    expect(at(12), 'Good afternoon');
+    expect(at(16), 'Good afternoon');
+    expect(at(17), 'Good evening');
+    expect(at(20), 'Good evening');
+    expect(at(21), 'Good night');
+    expect(at(3), 'Good night');
   });
 }

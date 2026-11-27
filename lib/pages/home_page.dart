@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -7,9 +9,6 @@ import '../core/theme.dart';
 import '../widgets/common.dart';
 import '../widgets/product_card.dart';
 import 'notifications_page.dart';
-import 'product_detail_page.dart';
-
-enum _Sort { popular, priceLow, priceHigh }
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,20 +19,64 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _brand = 0;
-  _Sort _sort = _Sort.popular;
+  final _scroll = ScrollController();
+  final _offset = ValueNotifier<double>(0);
+  Timer? _adTimer;
+  int _ad = 0;
+  bool _adOpen = true;
 
-  List<Product> _items(Brand brand) {
-    final items = products.where((p) => p.brandId == brand.id).toList();
-    switch (_sort) {
-      case _Sort.popular:
-        break;
-      case _Sort.priceLow:
-        items.sort((a, b) => a.price.compareTo(b.price));
-      case _Sort.priceHigh:
-        items.sort((a, b) => b.price.compareTo(a.price));
-    }
-    return items;
+  @override
+  void initState() {
+    super.initState();
+    _scroll.addListener(() => _offset.value = _scroll.offset);
+    _adTimer = Timer.periodic(const Duration(seconds: 6), (_) {
+      if (mounted && _adOpen) setState(() => _ad = (_ad + 1) % 3);
+    });
   }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    precacheProductImages(context);
+  }
+
+  @override
+  void dispose() {
+    _adTimer?.cancel();
+    _scroll.dispose();
+    _offset.dispose();
+    super.dispose();
+  }
+
+  List<Product> _items(Brand brand) =>
+      products.where((p) => p.brandId == brand.id).toList();
+
+  List<_Promo> _promos(BuildContext context) => [
+    _Promo(
+      title: 'Extra 10% off',
+      body: 'Code WELCOME10 on your first order',
+      icon: Icons.local_offer_rounded,
+      colors: const [kAccent, kAccentLight],
+      onTap: () {
+        app.applyPromo('WELCOME10');
+        toast(context, 'WELCOME10 added — see it in your cart');
+      },
+    ),
+    _Promo(
+      title: 'Strong foundations',
+      body: 'Tiger Cement OPC & PPC, ready to order',
+      icon: Icons.foundation_rounded,
+      colors: const [kBrandGreen, kGreenLight],
+      onTap: () => setState(() => _brand = 0),
+    ),
+    _Promo(
+      title: 'Free delivery',
+      body: 'Delivery is ৳0 on every order',
+      icon: Icons.local_shipping_rounded,
+      colors: const [kDarkGreen, kDarkGreenLight],
+      onTap: () => shellIndex.value = 2,
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +84,8 @@ class _HomePageState extends State<HomePage> {
     final items = _items(brand);
     final tint = items.isEmpty ? kBeige : items.first.tint;
 
-    return CustomScrollView(
+    final scrollView = CustomScrollView(
+      controller: _scroll,
       slivers: [
         SliverToBoxAdapter(
           child: _Header(onSearch: () => shellIndex.value = 1),
@@ -52,65 +96,46 @@ class _HomePageState extends State<HomePage> {
             decoration: BoxDecoration(
               color: tint,
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(40),
+                top: Radius.circular(Rd.xxl),
               ),
             ),
-            padding: const EdgeInsets.only(top: 24, bottom: 8),
+            padding: const EdgeInsets.only(top: Sp.x6, bottom: Sp.x2),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _PromoCarousel(onBrand: () => setState(() => _brand = 0)),
-                ListenableBuilder(
-                  listenable: app,
-                  builder: (context, _) => app.viewed.isEmpty
-                      ? const SizedBox(height: 22)
-                      : _RecentlyViewed(ids: List.of(app.viewed)),
-                ),
                 Padding(
-                  padding: const EdgeInsets.only(left: 23),
-                  child: Text('Choose Brand', style: _label),
+                  padding: const EdgeInsets.only(left: Sp.page),
+                  child: Text('Choose brand', style: _label),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: Sp.x3),
                 Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: Sp.page),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      for (var i = 0; i < brands.length; i++)
-                        _BrandTile(
-                          brand: brands[i],
-                          selected: i == _brand,
-                          onTap: () => setState(() => _brand = i),
+                      for (var i = 0; i < brands.length; i++) ...[
+                        if (i > 0) const SizedBox(width: Sp.x3),
+                        Expanded(
+                          child: _BrandTile(
+                            brand: brands[i],
+                            selected: i == _brand,
+                            onTap: () => setState(() => _brand = i),
+                          ),
                         ),
+                      ],
                     ],
                   ),
                 ),
-                const SizedBox(height: 26),
+                const SizedBox(height: Sp.x6),
                 Padding(
-                  padding: const EdgeInsets.only(left: 23),
-                  child: Text(brand.title, style: _label),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 44,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 19),
+                  padding: const EdgeInsets.symmetric(horizontal: Sp.page),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
                     children: [
-                      _SortChip(
-                        'Popular',
-                        _sort == _Sort.popular,
-                        () => setState(() => _sort = _Sort.popular),
-                      ),
-                      _SortChip(
-                        'Price: low to high',
-                        _sort == _Sort.priceLow,
-                        () => setState(() => _sort = _Sort.priceLow),
-                      ),
-                      _SortChip(
-                        'Price: high to low',
-                        _sort == _Sort.priceHigh,
-                        () => setState(() => _sort = _Sort.priceHigh),
+                      Expanded(child: Text(brand.title, style: _label)),
+                      Text(
+                        '${items.length} ${items.length == 1 ? 'product' : 'products'}',
+                        style: dm(12, color: kMuted),
                       ),
                     ],
                   ),
@@ -120,254 +145,221 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         if (items.isEmpty)
-          SliverFillRemaining(
-            hasScrollBody: false,
+          SliverToBoxAdapter(
             child: Container(
               color: tint,
+              height: 240,
               child: const EmptyState(
                 icon: Icons.inventory_2_outlined,
                 message: 'No products from this brand yet.',
               ),
             ),
           )
-        else ...[
+        else
           DecoratedSliver(
             decoration: BoxDecoration(color: tint),
             sliver: SliverPadding(
-              padding: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.only(top: Sp.x3),
               sliver: ProductGrid(items: items),
             ),
           ),
-          SliverFillRemaining(
-            hasScrollBody: false,
-            child: Container(
-              color: tint,
-              constraints: const BoxConstraints(minHeight: 130),
-            ),
+        // Room for the floating tab bar.
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: Container(
+            color: tint,
+            // Tab bar + the sticky ad above it.
+            constraints: BoxConstraints(minHeight: _adOpen ? 220 : 130),
           ),
-        ],
+        ),
       ],
     );
-  }
-}
-
-TextStyle get _label =>
-    dm(16, height: 21 / 16, color: Colors.black.withValues(alpha: 0.7));
-
-class _SortChip extends StatelessWidget {
-  const _SortChip(this.label, this.selected, this.onTap);
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Tappable(
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: selected
-                ? Colors.black
-                : Colors.white.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: Text(
-            label,
-            style: dm(
-              13,
-              weight: FontWeight.w600,
-              color: selected ? Colors.white : Colors.black87,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PromoCarousel extends StatefulWidget {
-  const _PromoCarousel({required this.onBrand});
-  final VoidCallback onBrand;
-
-  @override
-  State<_PromoCarousel> createState() => _PromoCarouselState();
-}
-
-class _PromoCarouselState extends State<_PromoCarousel> {
-  final _controller = PageController(viewportFraction: 0.88);
-  int _page = 0;
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final banners = [
-      _Banner(
-        title: 'Extra 10% off',
-        body: 'Apply code WELCOME10 to your cart',
-        cta: 'Apply code',
-        icon: Icons.local_offer_outlined,
-        colors: const [Color(0xFFE36B35), Color(0xFFF2A154)],
-        onTap: () {
-          app.applyPromo('WELCOME10');
-          toast(context, 'WELCOME10 added — see it in your cart');
-        },
-      ),
-      _Banner(
-        title: 'Strong foundations',
-        body: 'Tiger Cement OPC & PPC, ready to order',
-        cta: 'Shop cement',
-        icon: Icons.foundation_outlined,
-        colors: const [Color(0xFF0D9032), Color(0xFF5CBF6B)],
-        onTap: widget.onBrand,
-      ),
-      _Banner(
-        title: 'Free delivery',
-        body: 'Delivery charges are ৳0 on every order',
-        cta: 'View cart',
-        icon: Icons.local_shipping_outlined,
-        colors: const [Color(0xFF1F5E2F), Color(0xFF3F8F4F)],
-        onTap: () => shellIndex.value = 2,
-      ),
-    ];
-    return Column(
+    final inset = MediaQuery.paddingOf(context).bottom;
+    // Height of the floating glass tab bar this page sits above.
+    final navHeight = 64 + (inset < 12 ? 12.0 : inset);
+    final promos = _promos(context);
+    return Stack(
       children: [
-        SizedBox(
-          height: 128,
-          child: PageView.builder(
-            controller: _controller,
-            itemCount: banners.length,
-            onPageChanged: (i) => setState(() => _page = i),
-            itemBuilder: (_, i) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: banners[i],
-            ),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < banners.length; i++)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: i == _page ? 20 : 6,
-                height: 6,
-                decoration: BoxDecoration(
-                  color: i == _page ? Colors.black87 : Colors.black26,
-                  borderRadius: BorderRadius.circular(6),
+        scrollView,
+        if (_adOpen)
+          Positioned(
+            left: Sp.x4,
+            right: Sp.x4,
+            bottom: navHeight + Sp.x2,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: Curves.easeOutCubic,
+              transitionBuilder: (child, anim) => FadeTransition(
+                opacity: anim,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0, 0.25),
+                    end: Offset.zero,
+                  ).animate(anim),
+                  child: child,
                 ),
               ),
-          ],
+              child: _StickyAd(
+                key: ValueKey(_ad),
+                promo: promos[_ad],
+                onClose: () => setState(() => _adOpen = false),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: ValueListenableBuilder<double>(
+            valueListenable: _offset,
+            builder: (_, y, child) {
+              // Fades in once the big header's search field has scrolled off.
+              final t = ((y - 110) / 60).clamp(0.0, 1.0);
+              return IgnorePointer(
+                ignoring: t == 0,
+                child: Opacity(
+                  opacity: t,
+                  child: Transform.translate(
+                    offset: Offset(0, -12 * (1 - t)),
+                    child: child,
+                  ),
+                ),
+              );
+            },
+            child: _StickyBar(onSearch: () => shellIndex.value = 1),
+          ),
         ),
       ],
     );
   }
 }
 
-class _Banner extends StatelessWidget {
-  const _Banner({
+TextStyle get _label => urbanist(18, weight: FontWeight.w800, color: kInk);
+
+class _Promo {
+  const _Promo({
     required this.title,
     required this.body,
-    required this.cta,
     required this.icon,
     required this.colors,
     required this.onTap,
   });
   final String title;
   final String body;
-  final String cta;
   final IconData icon;
   final List<Color> colors;
   final VoidCallback onTap;
+}
+
+/// Compact ad pinned above the tab bar. Rotates through the offers and can be
+/// dismissed for the session.
+class _StickyAd extends StatelessWidget {
+  const _StickyAd({super.key, required this.promo, required this.onClose});
+  final _Promo promo;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colors.first.withValues(alpha: 0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -18,
-            bottom: -22,
-            child: Icon(
-              icon,
-              size: 120,
-              color: Colors.white.withValues(alpha: 0.18),
+    return Semantics(
+      button: true,
+      label: '${promo.title}. ${promo.body}',
+      child: GestureDetector(
+        onTap: promo.onTap,
+        child: Container(
+          height: 72,
+          padding: const EdgeInsets.fromLTRB(Sp.x3, Sp.x2, Sp.x1, Sp.x2),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(Rd.xl),
+            gradient: LinearGradient(
+              colors: promo.colors,
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: promo.colors.first.withValues(alpha: 0.4),
+                blurRadius: 18,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: urbanist(
-                    20,
-                    weight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white.withValues(alpha: 0.22),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  body,
-                  style: dm(12, color: Colors.white.withValues(alpha: 0.92)),
-                ),
-                const Spacer(),
-                Tappable(
-                  onTap: onTap,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      cta,
-                      style: dm(
-                        12,
-                        weight: FontWeight.w700,
-                        color: Colors.black,
+                child: Icon(promo.icon, size: 24, color: Colors.white),
+              ),
+              const SizedBox(width: Sp.x3),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      promo.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: urbanist(
+                        18,
+                        weight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
-                  ),
+                    Text(
+                      promo.body,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: dm(
+                        12,
+                        color: Colors.white.withValues(alpha: 0.95),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              Container(
+                width: 36,
+                height: 36,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 20,
+                  color: promo.colors.first,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Dismiss',
+                onPressed: onClose,
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  Icons.close_rounded,
+                  size: 20,
+                  color: Colors.white.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
+}
+
+/// Time-of-day greeting for the Home header.
+String greetingFor([DateTime? now]) {
+  final h = (now ?? DateTime.now()).hour;
+  if (h >= 5 && h < 12) return 'Good morning';
+  if (h >= 12 && h < 17) return 'Good afternoon';
+  if (h >= 17 && h < 21) return 'Good evening';
+  return 'Good night';
 }
 
 class _Header extends StatelessWidget {
@@ -381,130 +373,71 @@ class _Header extends StatelessWidget {
       listenable: app,
       builder: (context, _) {
         final signedIn = app.name.isNotEmpty;
-        final unread = !app.notificationsSeen && app.orders.isNotEmpty;
-        return SizedBox(
-          height: top + 244,
-          child: Stack(
+        final name = signedIn ? app.name : 'Guest';
+        return Padding(
+          padding: EdgeInsets.fromLTRB(Sp.page, top + Sp.x3, Sp.page, Sp.x5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Positioned(
-                top: top + 8,
-                left: 0,
-                right: 0,
-                child: const Center(child: WeLogo(width: 118)),
-              ),
-              Positioned(
-                left: 32,
-                top: top + 34.5,
-                child: SvgPicture.asset('assets/icons/menu.svg'),
-              ),
-              Positioned(
-                right: 24,
-                top: top + 26,
-                child: Semantics(
-                  button: true,
-                  label: 'Notifications',
-                  child: GestureDetector(
-                    behavior: HitTestBehavior.opaque,
-                    onTap: () {
-                      app.markNotificationsSeen();
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const NotificationsPage(),
-                        ),
-                      );
-                    },
-                    child: SizedBox(
-                      width: 48,
-                      height: 48,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const Icon(
-                            Icons.notifications_none_rounded,
-                            size: 30,
-                            color: kInk,
+              // Brand on the left, actions on the right.
+              Row(
+                children: [
+                  const WeLogo(width: 56),
+                  const Spacer(),
+                  const _BellButton(),
+                  const SizedBox(width: Sp.x2),
+                  Semantics(
+                    button: true,
+                    label: 'Open profile',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => shellIndex.value = 4,
+                      child: CircleAvatar(
+                        radius: Sp.control / 2,
+                        backgroundColor: kBeige,
+                        child: Text(
+                          name[0].toUpperCase(),
+                          style: urbanist(
+                            18,
+                            weight: FontWeight.w800,
+                            color: kBrandGreen,
                           ),
-                          if (unread)
-                            Positioned(
-                              right: 11,
-                              top: 10,
-                              child: Container(
-                                width: 10,
-                                height: 10,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE53935),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-              Positioned(
-                left: 34,
-                right: 40,
-                top: top + 89,
-                child: Text.rich(
-                  TextSpan(
+              const SizedBox(height: Sp.x5),
+              // Large greeting.
+              Text(greetingFor(), style: dm(14, color: kMuted)),
+              const SizedBox(height: Sp.x1),
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: urbanist(26, weight: FontWeight.w800, color: kInk),
+              ),
+              const SizedBox(height: Sp.x4),
+              // Search.
+              Tappable(
+                onTap: onSearch,
+                child: Container(
+                  height: Sp.control,
+                  padding: const EdgeInsets.symmetric(horizontal: Sp.x4),
+                  decoration: BoxDecoration(
+                    color: kBarGrey,
+                    borderRadius: BorderRadius.circular(Rd.lg),
+                  ),
+                  child: Row(
                     children: [
-                      TextSpan(
-                        text: signedIn ? 'Welcome back\n' : 'Discover our\n',
-                        style: urbanist(
-                          24,
-                          color: Colors.black.withValues(alpha: 0.5),
-                          height: 29 / 24,
-                        ),
-                      ),
-                      TextSpan(
-                        text: signedIn ? app.name : 'perfect product',
-                        style: urbanist(
-                          24,
-                          weight: FontWeight.w700,
-                          height: 29 / 24,
-                        ),
+                      SvgPicture.asset('assets/icons/search_field.svg'),
+                      const SizedBox(width: Sp.x3),
+                      Text(
+                        'Search cement, bricks…',
+                        style: dm(14, color: kMuted),
                       ),
                     ],
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Positioned(
-                left: 32,
-                right: 33,
-                top: top + 166,
-                child: Tappable(
-                  onTap: onSearch,
-                  child: Container(
-                    height: 48,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: kBarGrey,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      children: [
-                        SvgPicture.asset('assets/icons/search_field.svg'),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Search...',
-                          style: dm(
-                            16,
-                            weight: FontWeight.w500,
-                            height: 1.5,
-                            spacing: -0.4,
-                            color: kInk.withValues(alpha: 0.5),
-                          ),
-                        ),
-                      ],
-                    ),
                   ),
                 ),
               ),
@@ -512,6 +445,116 @@ class _Header extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Notification bell with an unread dot. Shared by the header and sticky bar.
+class _BellButton extends StatelessWidget {
+  const _BellButton();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: app,
+      builder: (context, _) {
+        final unread = !app.notificationsSeen && app.orders.isNotEmpty;
+        return Semantics(
+          button: true,
+          label: 'Notifications',
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              app.markNotificationsSeen();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const NotificationsPage()),
+              );
+            },
+            child: Container(
+              width: Sp.control,
+              height: Sp.control,
+              decoration: const BoxDecoration(
+                color: kBarGrey,
+                shape: BoxShape.circle,
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const Icon(
+                    Icons.notifications_none_rounded,
+                    size: 24,
+                    color: kInk,
+                  ),
+                  if (unread)
+                    Positioned(
+                      right: 12,
+                      top: 11,
+                      child: Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          color: kFavorite,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: kBarGrey, width: 1.5),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Compact frosted-glass bar pinned to the top of Home once you scroll:
+/// logo, a search pill and the bell.
+class _StickyBar extends StatelessWidget {
+  const _StickyBar({required this.onSearch});
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    return GlassBar(
+      padding: EdgeInsets.fromLTRB(Sp.page, top + Sp.x2, Sp.page, Sp.x2),
+      child: Row(
+        children: [
+          const WeLogo(width: 44),
+          const SizedBox(width: Sp.x3),
+          Expanded(
+            child: Tappable(
+              onTap: onSearch,
+              child: Container(
+                height: Sp.control,
+                padding: const EdgeInsets.symmetric(horizontal: Sp.x4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(Rd.pill),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.search_rounded, size: 20, color: kMuted),
+                    const SizedBox(width: Sp.x2),
+                    Expanded(
+                      child: Text(
+                        'Search cement, bricks…',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: dm(14, color: kMuted),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: Sp.x3),
+          const _BellButton(),
+        ],
+      ),
     );
   }
 }
@@ -543,7 +586,7 @@ class _BrandTile extends StatelessWidget {
         );
       case 'sjil':
         return Padding(
-          padding: const EdgeInsets.fromLTRB(4, 5, 0, 0),
+          padding: const EdgeInsets.fromLTRB(Sp.x1, 5, 0, 0),
           child: Image.asset(
             brand.logo,
             width: 114,
@@ -562,106 +605,24 @@ class _BrandTile extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 118,
-        height: 70,
+        height: 72,
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          color: const Color(0xFFFEFEFE),
-          borderRadius: BorderRadius.circular(10),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(Rd.md),
           border: Border.all(
-            color: selected ? const Color(0xFFE36B35) : Colors.transparent,
+            color: selected ? kAccent : Colors.transparent,
+            width: 2,
           ),
-          boxShadow: selected
-              ? const [
-                  BoxShadow(
-                    color: Color(0x40000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 1),
-                  ),
-                ]
-              : null,
+          boxShadow: selected ? Elev.card : null,
         ),
-        child: _logo(),
+        // Logos are laid out for a 118x70 box; scale that box to the tile.
+        child: FittedBox(
+          fit: BoxFit.cover,
+          clipBehavior: Clip.hardEdge,
+          child: SizedBox(width: 118, height: 70, child: _logo()),
+        ),
       ),
-    );
-  }
-}
-
-class _RecentlyViewed extends StatelessWidget {
-  const _RecentlyViewed({required this.ids});
-  final List<String> ids;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 22),
-        Padding(
-          padding: const EdgeInsets.only(left: 23),
-          child: Text('Recently viewed', style: _label),
-        ),
-        const SizedBox(height: 10),
-        SizedBox(
-          height: 74,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 19),
-            children: [
-              for (final id in ids)
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Tappable(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            ProductDetailPage(product: productById(id)),
-                      ),
-                    ),
-                    child: Container(
-                      width: 190,
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          Image.asset(
-                            productById(id).image,
-                            width: 54,
-                            height: 54,
-                            fit: BoxFit.contain,
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  productById(id).name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: dm(12, weight: FontWeight.w700),
-                                ),
-                                Text(
-                                  money(productById(id).price),
-                                  style: dm(12, color: Colors.black54),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 22),
-      ],
     );
   }
 }

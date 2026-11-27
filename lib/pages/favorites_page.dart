@@ -15,17 +15,17 @@ class FavoritesPage extends StatelessWidget {
       listenable: app,
       builder: (context, _) {
         final items = products.where((p) => app.isFavorite(p.id)).toList();
-        return Column(
+        return GlassHeaderColumn(
           children: [
             PageHeader(title: 'Favourites', onBack: () => shellIndex.value = 0),
             if (items.isNotEmpty)
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                padding: const EdgeInsets.fromLTRB(Sp.page, 0, Sp.page, Sp.x3),
                 child: Row(
                   children: [
                     Text(
                       '${items.length} saved ${items.length == 1 ? 'item' : 'items'}',
-                      style: dm(13, color: Colors.black54),
+                      style: dm(13, color: kMuted),
                     ),
                     const Spacer(),
                     TextButton.icon(
@@ -47,21 +47,29 @@ class FavoritesPage extends StatelessWidget {
               ),
             Expanded(
               child: items.isEmpty
-                  ? const EmptyState(
-                      icon: Icons.favorite_border,
-                      message:
-                          'No favourites yet.\nTap the heart on a product to save it here.',
-                    )
-                  : Container(
-                      decoration: const BoxDecoration(
-                        color: kBeige,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(40),
+                  ? Builder(
+                      builder: (ctx) => Padding(
+                        padding: EdgeInsets.only(top: GlassTopInset.of(ctx)),
+                        child: EmptyHero(
+                          icon: Icons.favorite_border,
+                          title: 'No favourites yet',
+                          message:
+                              'Tap the heart on any product to save it here.',
+                          actionLabel: 'Browse products',
+                          onAction: () => shellIndex.value = 0,
+                          iconColor: kFavorite,
                         ),
                       ),
+                    )
+                  : Container(
+                      // Full-bleed so the glass bar frosts the beige.
+                      color: kBeige,
                       child: CustomScrollView(
                         slivers: [
-                          const SliverToBoxAdapter(child: SizedBox(height: 28)),
+                          const SliverToBoxAdapter(child: GlassInsetSpacer()),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: Sp.x4),
+                          ),
                           ProductGrid(items: items),
                           const SliverToBoxAdapter(
                             child: SizedBox(height: 130),

@@ -35,7 +35,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
       body:
           'Follow each order from confirmation to your doorstep, all in My Orders.',
       image: 'assets/images/product_ppc.png',
-      tint: Color(0xFFDDEFD9),
+      tint: kSoftGreen,
     ),
   ];
 
@@ -56,6 +56,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
     final last = _page == _slides.length - 1;
     final bottom = MediaQuery.paddingOf(context).bottom;
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Expanded(
@@ -67,14 +68,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.fromLTRB(28, 8, 28, bottom + 24),
+            padding: EdgeInsets.fromLTRB(28, Sp.x2, 28, bottom + 24),
             child: Row(
               children: [
                 SizedBox(
                   width: 72,
                   child: TextButton(
                     onPressed: _finish,
-                    child: Text('Skip', style: dm(14, color: Colors.black54)),
+                    child: Text('Skip', style: dm(14, color: kMuted)),
                   ),
                 ),
                 Expanded(
@@ -89,7 +90,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           height: 8,
                           decoration: BoxDecoration(
                             color: i == _page ? kBrandGreen : kBarGrey,
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(Rd.sm),
                           ),
                         ),
                     ],
@@ -142,7 +143,7 @@ class _SlideView extends StatelessWidget {
             decoration: BoxDecoration(
               color: slide.tint,
               borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(48),
+                bottom: Radius.circular(Rd.xxl),
               ),
             ),
             child: SafeArea(
@@ -176,7 +177,7 @@ class _SlideView extends StatelessWidget {
         Expanded(
           flex: 4,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(32, 32, 32, 0),
+            padding: const EdgeInsets.fromLTRB(Sp.x8, Sp.x8, Sp.x8, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -185,10 +186,7 @@ class _SlideView extends StatelessWidget {
                   style: urbanist(32, weight: FontWeight.w800, height: 1.15),
                 ),
                 const SizedBox(height: 14),
-                Text(
-                  slide.body,
-                  style: dm(15, color: Colors.black54, height: 1.45),
-                ),
+                Text(slide.body, style: dm(15, color: kMuted, height: 1.45)),
               ],
             ),
           ),

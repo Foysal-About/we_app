@@ -32,14 +32,14 @@ class HelpPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: GlassHeaderColumn(
         children: [
           const PageHeader(title: 'Help & Support'),
           Expanded(
             child: ListView(
               padding: EdgeInsets.fromLTRB(
                 20,
-                4,
+                PageHeader.heightOf(context) + Sp.x2,
                 20,
                 MediaQuery.paddingOf(context).bottom + 24,
               ),
@@ -59,44 +59,45 @@ class HelpPage extends StatelessWidget {
                       ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: Sp.x6),
                 Text(
                   'Frequently asked',
-                  style: urbanist(18, weight: FontWeight.w700),
+                  style: urbanist(18, weight: FontWeight.w800),
                 ),
                 const SizedBox(height: 10),
                 for (final f in _faqs)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    decoration: BoxDecoration(
-                      color: kBeige,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Theme(
-                      data: Theme.of(
-                        context,
-                      ).copyWith(dividerColor: Colors.transparent),
-                      child: ExpansionTile(
-                        tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                        childrenPadding: const EdgeInsets.fromLTRB(
-                          16,
-                          0,
-                          16,
-                          16,
-                        ),
-                        expandedAlignment: Alignment.centerLeft,
-                        shape: const RoundedRectangleBorder(),
-                        collapsedShape: const RoundedRectangleBorder(),
-                        title: Text(
-                          f.$1,
-                          style: dm(14, weight: FontWeight.w600),
-                        ),
-                        children: [
-                          Text(
-                            f.$2,
-                            style: dm(13, color: Colors.black87, height: 1.45),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: Sp.x3),
+                    child: SurfaceCard(
+                      padding: EdgeInsets.zero,
+                      child: Theme(
+                        data: Theme.of(
+                          context,
+                        ).copyWith(dividerColor: Colors.transparent),
+                        child: ExpansionTile(
+                          tilePadding: const EdgeInsets.symmetric(
+                            horizontal: Sp.x4,
                           ),
-                        ],
+                          childrenPadding: const EdgeInsets.fromLTRB(
+                            16,
+                            0,
+                            16,
+                            16,
+                          ),
+                          expandedAlignment: Alignment.centerLeft,
+                          shape: const RoundedRectangleBorder(),
+                          collapsedShape: const RoundedRectangleBorder(),
+                          title: Text(
+                            f.$1,
+                            style: dm(14, weight: FontWeight.w600),
+                          ),
+                          children: [
+                            Text(
+                              f.$2,
+                              style: dm(13, color: kInk, height: 1.45),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -116,14 +117,11 @@ class _Contact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Tappable(
+    return SurfaceCard(
       onTap: () => toast(context, '$label support is not part of this demo'),
-      child: Container(
+      padding: EdgeInsets.zero,
+      child: SizedBox(
         height: 84,
-        decoration: BoxDecoration(
-          color: kBarGrey,
-          borderRadius: BorderRadius.circular(18),
-        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

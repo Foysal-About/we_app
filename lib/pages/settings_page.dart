@@ -13,12 +13,17 @@ class SettingsPage extends StatelessWidget {
     return Scaffold(
       body: ListenableBuilder(
         listenable: app,
-        builder: (context, _) => Column(
+        builder: (context, _) => GlassHeaderColumn(
           children: [
             const PageHeader(title: 'Settings'),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                padding: EdgeInsets.fromLTRB(
+                  20,
+                  PageHeader.heightOf(context) + Sp.x2,
+                  20,
+                  24,
+                ),
                 children: [
                   const _Section('Notifications'),
                   _Switch(
@@ -85,7 +90,7 @@ class SettingsPage extends StatelessWidget {
             controller: current,
             obscure: true,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: Sp.x3),
           WeTextField(label: 'New password', controller: next, obscure: true),
           const SizedBox(height: 18),
           Builder(
@@ -111,15 +116,10 @@ class _Section extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 6, left: 4),
+    padding: const EdgeInsets.only(bottom: 6, left: Sp.x1),
     child: Text(
       text.toUpperCase(),
-      style: dm(
-        11,
-        weight: FontWeight.w700,
-        color: Colors.black45,
-        spacing: 0.8,
-      ),
+      style: dm(11, weight: FontWeight.w700, color: kSubtle, spacing: 0.8),
     ),
   );
 }
@@ -137,31 +137,29 @@ class _Switch extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 8),
-    padding: const EdgeInsets.fromLTRB(16, 6, 8, 6),
-    decoration: BoxDecoration(
-      color: kBeige,
-      borderRadius: BorderRadius.circular(14),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: dm(14, weight: FontWeight.w600)),
-              Text(subtitle, style: dm(11, color: Colors.black54)),
-            ],
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: Sp.x2),
+    child: SurfaceCard(
+      padding: const EdgeInsets.fromLTRB(Sp.x4, Sp.x2, Sp.x2, Sp.x2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: dm(14, weight: FontWeight.w600)),
+                Text(subtitle, style: dm(11, color: kMuted)),
+              ],
+            ),
           ),
-        ),
-        Switch(
-          value: value,
-          activeThumbColor: Colors.white,
-          activeTrackColor: kBrandGreen,
-          onChanged: onChanged,
-        ),
-      ],
+          Switch(
+            value: value,
+            activeThumbColor: Colors.white,
+            activeTrackColor: kBrandGreen,
+            onChanged: onChanged,
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -180,17 +178,12 @@ class _Tile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: InkWell(
+    padding: const EdgeInsets.only(bottom: Sp.x2),
+    child: SurfaceCard(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: Sp.x4),
+      child: SizedBox(
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: kBeige,
-          borderRadius: BorderRadius.circular(14),
-        ),
         child: Row(
           children: [
             Icon(icon, size: 22, color: kInk),
@@ -198,10 +191,8 @@ class _Tile extends StatelessWidget {
             Expanded(
               child: Text(title, style: dm(14, weight: FontWeight.w600)),
             ),
-            if (trailing != null)
-              Text(trailing!, style: dm(12, color: Colors.black54)),
-            if (onTap != null)
-              const Icon(Icons.chevron_right, color: Colors.black38),
+            if (trailing != null) Text(trailing!, style: dm(12, color: kMuted)),
+            if (onTap != null) const Icon(Icons.chevron_right, color: kSubtle),
           ],
         ),
       ),

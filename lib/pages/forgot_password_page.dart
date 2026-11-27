@@ -23,17 +23,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           const PageHeader(showLogo: true),
           Expanded(
             child: Container(
               width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              padding: const EdgeInsets.all(24),
+              margin: const EdgeInsets.fromLTRB(Sp.x4, Sp.x2, Sp.x4, Sp.x6),
+              padding: const EdgeInsets.all(Sp.x6),
               decoration: BoxDecoration(
                 color: kBarGrey,
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(Rd.xxl),
               ),
               child: SingleChildScrollView(
                 child: AnimatedSwitcher(
@@ -53,18 +54,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text('Forgot password?', style: urbanist(30, weight: FontWeight.w700)),
-      const SizedBox(height: 8),
+      const SizedBox(height: Sp.x2),
       Text(
         'Enter your phone or email and we will send you a link to reset your password.',
-        style: dm(14, color: Colors.black54, height: 1.4),
+        style: dm(14, color: kMuted, height: 1.4),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: Sp.x6),
       WeTextField(
         label: 'Your Phone/Email',
         controller: _email,
         keyboard: TextInputType.emailAddress,
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: Sp.x6),
       PrimaryButton(
         label: 'Send reset link',
         color: kBrandGreen,
@@ -77,7 +78,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   Widget _done(BuildContext context) => Column(
     key: const ValueKey('done'),
     children: [
-      const SizedBox(height: 24),
+      const SizedBox(height: Sp.x6),
       const CircleAvatar(
         radius: 36,
         backgroundColor: kBrandGreen,
@@ -87,13 +88,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           size: 34,
         ),
       ),
-      const SizedBox(height: 20),
+      const SizedBox(height: Sp.x5),
       Text('Check your inbox', style: urbanist(24, weight: FontWeight.w700)),
-      const SizedBox(height: 8),
+      const SizedBox(height: Sp.x2),
       Text(
         'If an account exists for ${_email.text.isEmpty ? 'that address' : _email.text}, a reset link is on its way.\n(Demo app — nothing is actually sent.)',
         textAlign: TextAlign.center,
-        style: dm(14, color: Colors.black54, height: 1.4),
+        style: dm(14, color: kMuted, height: 1.4),
       ),
       const SizedBox(height: 28),
       PrimaryButton(

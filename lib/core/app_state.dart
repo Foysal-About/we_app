@@ -24,7 +24,6 @@ class AppState extends ChangeNotifier {
   double promoPct = 0;
   bool notificationsSeen = false;
   final List<String> recentSearches = [];
-  final List<String> viewed = [];
 
   bool notifyOrders = true;
   bool notifyOffers = false;
@@ -80,7 +79,6 @@ class AppState extends ChangeNotifier {
     cards.clear();
     reviews.clear();
     recentSearches.clear();
-    viewed.clear();
     promoCode = null;
     promoPct = 0;
     notificationsSeen = false;
@@ -250,15 +248,6 @@ class AppState extends ChangeNotifier {
 
   void clearRecentSearches() {
     recentSearches.clear();
-    notifyListeners();
-  }
-
-  // --- recently viewed ------------------------------------------------
-  void markViewed(String id) {
-    if (viewed.isNotEmpty && viewed.first == id) return;
-    viewed.remove(id);
-    viewed.insert(0, id);
-    if (viewed.length > 6) viewed.removeLast();
     notifyListeners();
   }
 

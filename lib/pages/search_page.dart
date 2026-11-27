@@ -42,22 +42,25 @@ class _SearchPageState extends State<SearchPage> {
       return p.name.toLowerCase().contains(q) ||
           brand.toLowerCase().contains(q);
     }).toList();
-    return Column(
+    return GlassHeaderColumn(
       children: [
         PageHeader(title: 'Search', onBack: () => shellIndex.value = 0),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+          padding: const EdgeInsets.symmetric(
+            horizontal: Sp.page,
+            vertical: Sp.x2,
+          ),
           child: Container(
-            height: 48,
-            padding: const EdgeInsets.only(left: 16, right: 4),
+            height: Sp.control,
+            padding: const EdgeInsets.only(left: Sp.x4, right: Sp.x1),
             decoration: BoxDecoration(
               color: kBarGrey,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(Rd.lg),
             ),
             child: Row(
               children: [
                 SvgPicture.asset('assets/icons/search_field.svg'),
-                const SizedBox(width: 12),
+                const SizedBox(width: Sp.x3),
                 Expanded(
                   child: TextField(
                     controller: _controller,
@@ -95,16 +98,17 @@ class _SearchPageState extends State<SearchPage> {
     return ListenableBuilder(
       listenable: app,
       builder: (context, _) => ListView(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 130),
+        padding: const EdgeInsets.fromLTRB(Sp.page, Sp.x3, Sp.page, 130),
         children: [
+          const GlassInsetSpacer(),
           if (app.recentSearches.isNotEmpty) ...[
             Row(
               children: [
-                Text('Recent', style: urbanist(16, weight: FontWeight.w700)),
+                Text('Recent', style: urbanist(16, weight: FontWeight.w800)),
                 const Spacer(),
                 TextButton(
                   onPressed: app.clearRecentSearches,
-                  child: Text('Clear', style: dm(12, color: Colors.black54)),
+                  child: Text('Clear', style: dm(12, color: kMuted)),
                 ),
               ],
             ),
@@ -124,7 +128,7 @@ class _SearchPageState extends State<SearchPage> {
           ],
           Text(
             'Popular searches',
-            style: urbanist(16, weight: FontWeight.w700),
+            style: urbanist(16, weight: FontWeight.w800),
           ),
           const SizedBox(height: 10),
           Wrap(
@@ -140,8 +144,8 @@ class _SearchPageState extends State<SearchPage> {
             ],
           ),
           const SizedBox(height: 22),
-          Text('Browse all', style: urbanist(16, weight: FontWeight.w700)),
-          const SizedBox(height: 4),
+          Text('Browse all', style: urbanist(16, weight: FontWeight.w800)),
+          const SizedBox(height: Sp.x1),
           for (final p in products) _ResultTile(product: p),
         ],
       ),
@@ -150,19 +154,25 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget _results(List<Product> results) {
     if (results.isEmpty) {
-      return const EmptyState(
-        icon: Icons.search_off,
-        message: 'No products match your search.',
+      return Builder(
+        builder: (c) => Padding(
+          padding: EdgeInsets.only(top: GlassTopInset.of(c)),
+          child: const EmptyState(
+            icon: Icons.search_off,
+            message: 'No products match your search.',
+          ),
+        ),
       );
     }
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 4, 24, 130),
+      padding: const EdgeInsets.fromLTRB(Sp.page, Sp.x1, Sp.page, 130),
       children: [
+        const GlassInsetSpacer(),
         Padding(
-          padding: const EdgeInsets.only(bottom: 4),
+          padding: const EdgeInsets.only(bottom: Sp.x1),
           child: Text(
             '${results.length} ${results.length == 1 ? 'result' : 'results'}',
-            style: dm(12, color: Colors.black54),
+            style: dm(12, color: kMuted),
           ),
         ),
         for (final p in results) _ResultTile(product: p, query: _q),
@@ -179,46 +189,105 @@ class _ResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = brands.firstWhere((b) => b.id == product.brandId);
-    return InkWell(
-      borderRadius: BorderRadius.circular(14),
-      onTap: () {
-        if (query != null) app.addRecentSearch(query!);
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ProductDetailPage(product: product),
-          ),
-        );
-      },
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          children: [
-            Container(
-              width: 64,
-              height: 64,
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: product.tint,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Image.asset(product.image, fit: BoxFit.contain),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: Sp.x3),
+      child: Tappable(
+        onTap: () {
+          if (query != null) app.addRecentSearch(query!);
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ProductDetailPage(product: product),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: urbanist(16, weight: FontWeight.w700),
+          );
+        },
+        child: SurfaceCard(
+          padding: const EdgeInsets.all(Sp.x3),
+          radius: Rd.lg,
+          child: Row(
+            children: [
+              Container(
+                clipBehavior: Clip.antiAlias,
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: kPanel,
+                  borderRadius: BorderRadius.circular(Rd.md),
+                ),
+                child: ProductImage.of(product),
+              ),
+              const SizedBox(width: Sp.x3),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      product.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: dm(14, weight: FontWeight.w700, color: kInk),
+                    ),
+                    Text(
+                      brand.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: dm(12, color: kMuted),
+                    ),
+                    const SizedBox(height: Sp.x1),
+                    Row(
+                      children: [
+                        Text(
+                          money(product.price),
+                          style: urbanist(
+                            16,
+                            weight: FontWeight.w800,
+                            color: product.oldPrice != null ? kBuyGreen : kInk,
+                          ),
+                        ),
+                        Text(
+                          ' / ${product.unit}',
+                          style: dm(12, color: kMuted),
+                        ),
+                        if (product.oldPrice != null) ...[
+                          const SizedBox(width: Sp.x2),
+                          Text(
+                            money(product.oldPrice!),
+                            style: dm(
+                              12,
+                              color: kSubtle,
+                            ).copyWith(decoration: TextDecoration.lineThrough),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: Sp.x2),
+              // Quick add.
+              Tooltip(
+                message: 'Add to cart',
+                child: Tappable(
+                  onTap: () {
+                    app.addToCart(product.id);
+                    toast(context, '${product.name} added to cart');
+                  },
+                  child: Container(
+                    width: Sp.control,
+                    height: Sp.control,
+                    decoration: const BoxDecoration(
+                      color: kBrandGreen,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.add_shopping_cart,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(brand.title, style: dm(12, color: Colors.black54)),
-                ],
+                ),
               ),
-            ),
-            Text(money(product.price), style: dm(15, weight: FontWeight.w700)),
-          ],
+            ],
+          ),
         ),
       ),
     );

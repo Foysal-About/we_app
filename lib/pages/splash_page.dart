@@ -57,10 +57,7 @@ class _SplashPageState extends State<SplashPage> {
             children: [
               const WeLogo(width: 170),
               const SizedBox(height: 14),
-              Text(
-                'Build with confidence',
-                style: urbanist(16, color: Colors.black54),
-              ),
+              Text('Build with confidence', style: urbanist(16, color: kMuted)),
             ],
           ),
         ),

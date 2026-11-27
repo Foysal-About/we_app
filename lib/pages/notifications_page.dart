@@ -18,7 +18,7 @@ class NotificationsPage extends StatelessWidget {
             if (app.notifyOffers)
               const _Note(
                 icon: Icons.local_offer_outlined,
-                color: Color(0xFFE08A00),
+                color: kWarning,
                 title: 'Extra 10% off',
                 body: 'Use code WELCOME10 at checkout on your next order.',
                 when: 'Offer',
@@ -33,19 +33,24 @@ class NotificationsPage extends StatelessWidget {
               when: 'Welcome',
             ),
           ];
-          return Column(
+          return GlassHeaderColumn(
             children: [
               const PageHeader(title: 'Notifications'),
               Expanded(
                 child: items.isEmpty
-                    ? const EmptyState(
-                        icon: Icons.notifications_off_outlined,
-                        message: 'Nothing new right now.',
+                    ? Padding(
+                        padding: EdgeInsets.only(
+                          top: PageHeader.heightOf(context),
+                        ),
+                        child: const EmptyState(
+                          icon: Icons.notifications_off_outlined,
+                          message: 'Nothing new right now.',
+                        ),
                       )
                     : ListView.separated(
                         padding: EdgeInsets.fromLTRB(
                           20,
-                          4,
+                          PageHeader.heightOf(context) + Sp.x2,
                           20,
                           MediaQuery.paddingOf(context).bottom + 24,
                         ),
@@ -75,24 +80,24 @@ class _Note {
     switch (o.status) {
       case OrderStatus.delivered:
         return _Note(
-          icon: Icons.check_circle_outline,
-          color: kGreen,
+          icon: OrderStatus.delivered.icon,
+          color: OrderStatus.delivered.color,
           title: 'Order delivered',
           body: 'Order ${o.id} has been delivered.',
           when: o.date,
         );
       case OrderStatus.processing:
         return _Note(
-          icon: Icons.hourglass_bottom,
-          color: const Color(0xFFE08A00),
+          icon: OrderStatus.processing.icon,
+          color: OrderStatus.processing.color,
           title: 'Order confirmed',
           body: 'Order ${o.id} is being prepared.',
           when: o.date,
         );
       case OrderStatus.cancelled:
         return _Note(
-          icon: Icons.cancel_outlined,
-          color: const Color(0xFFD32F2F),
+          icon: OrderStatus.cancelled.icon,
+          color: OrderStatus.cancelled.color,
           title: 'Order cancelled',
           body: 'Order ${o.id} was cancelled.',
           when: o.date,
@@ -113,19 +118,7 @@ class _NoteTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 12,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
+    return SurfaceCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -152,15 +145,12 @@ class _NoteTile extends StatelessWidget {
                         style: dm(14, weight: FontWeight.w700),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(note.when, style: dm(11, color: Colors.black45)),
+                    const SizedBox(width: Sp.x2),
+                    Text(note.when, style: dm(11, color: kSubtle)),
                   ],
                 ),
                 const SizedBox(height: 3),
-                Text(
-                  note.body,
-                  style: dm(12.5, color: Colors.black54, height: 1.35),
-                ),
+                Text(note.body, style: dm(12.5, color: kMuted, height: 1.35)),
               ],
             ),
           ),
